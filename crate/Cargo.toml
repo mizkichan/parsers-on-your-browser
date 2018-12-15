@@ -1,0 +1,13 @@
+[package]
+name = "parsers-on-your-browser"
+version = "0.1.0"
+authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+console_error_panic_hook = "0.1"
+wasm-bindgen = "0.2"
+wee_alloc = "0.4"
