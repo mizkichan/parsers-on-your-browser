@@ -1,0 +1,24 @@
+body {
+  font-family: monospace;
+}
+
+.label {
+  display: inline-block;
+  width: 2in;
+}
+
+textarea,
+input[type="text"] {
+  border: thin solid black;
+  display: inline-block;
+  font-family: inherit;
+  vertical-align: middle;
+  width: 4in;
+}
+
+textarea {
+  height: 2in;
+  resize: none;
+}
+
+/* vim: set ts=2 sw=2 et: */
