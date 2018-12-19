@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Grammar } from "../crate/pkg/parsers_on_your_browser";
 
 let wasm: typeof import("../crate/pkg/parsers_on_your_browser");
 
@@ -7,7 +6,7 @@ export default class App extends React.Component {
   state: {
     bnf: string;
     input: string;
-    grammar: Grammar | null;
+    grammar: any;
   };
 
   constructor(props: {}) {
@@ -83,7 +82,7 @@ const Controlls = ({
   </div>
 );
 
-const GrammarBox = ({ grammar }: { grammar: Grammar }) => (
+const GrammarBox = ({ grammar }: { grammar: any }) => (
   <table>
     <caption>Grammar</caption>
     <tbody>
