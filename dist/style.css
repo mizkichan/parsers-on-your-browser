@@ -21,4 +21,19 @@ textarea {
   resize: none;
 }
 
+.terminal,
+.non-terminal {
+  background-color: #ddd;
+  margin: 0 0.25em;
+  padding: 0.25em;
+}
+
+.terminal {
+  color: #f00;
+}
+
+.non-terminal {
+  color: #00f;
+}
+
 /* vim: set ts=2 sw=2 et: */

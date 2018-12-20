@@ -1,24 +1,26 @@
-#[derive(Debug, PartialEq)]
+use serde_derive::Serialize;
+
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Grammar<'a, 'b> {
     pub rules: Vec<Rule<'a, 'b>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Rule<'a, 'b> {
     pub lhs: NonTerminalSymbol<'a>,
     pub rhs: Vec<Symbol<'b>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum Symbol<'a> {
     Terminal(TerminalSymbol<'a>),
     NonTerminal(NonTerminalSymbol<'a>),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct TerminalSymbol<'a>(Option<&'a str>);
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct NonTerminalSymbol<'a>(&'a str);
 
 impl<'a> Symbol<'a> {
