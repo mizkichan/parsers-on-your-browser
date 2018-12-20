@@ -1,4 +1,5 @@
 mod common;
+mod earley;
 use wasm_bindgen::prelude::*;
 
 #[global_allocator]

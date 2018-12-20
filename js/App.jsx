@@ -32,6 +32,7 @@ export default class App extends React.Component {
       <div>
         <Controlls onChange={value => this.handleControllsChange(value)} />
         {this.state.grammar && <GrammarBox grammar={this.state.grammar} />}
+        {this.state.algorithm === "earley" && <Earley />}
       </div>
     );
   }
@@ -105,5 +106,7 @@ const Radio = ({ label, name, value, defaultChecked, onChange }) => (
     {label}
   </label>
 );
+
+const Earley = () => <div>Earley</div>;
 
 // vim: set ts=2 sw=2 et:

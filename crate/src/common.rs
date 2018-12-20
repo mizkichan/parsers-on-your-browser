@@ -1,14 +1,14 @@
 use serde_derive::Serialize;
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct Grammar<'a, 'b> {
-    pub rules: Vec<Rule<'a, 'b>>,
+pub struct Grammar<'a> {
+    pub rules: Vec<Rule<'a>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct Rule<'a, 'b> {
+pub struct Rule<'a> {
     pub lhs: NonTerminalSymbol<'a>,
-    pub rhs: Vec<Symbol<'b>>,
+    pub rhs: Vec<Symbol<'a>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -18,10 +18,10 @@ pub enum Symbol<'a> {
 }
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct TerminalSymbol<'a>(Option<&'a str>);
+pub struct TerminalSymbol<'a>(pub Option<&'a str>);
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct NonTerminalSymbol<'a>(&'a str);
+pub struct NonTerminalSymbol<'a>(pub &'a str);
 
 impl<'a> Symbol<'a> {
     pub fn name(&'a self) -> Option<&'a str> {
@@ -43,7 +43,7 @@ impl<'a> NonTerminalSymbol<'a> {
     }
 }
 
-pub fn parse_bnf<'a>(bnf: &'a str) -> Grammar<'a, 'a> {
+pub fn parse_bnf(bnf: &str) -> Grammar {
     let lines = bnf
         .lines()
         .filter_map(|line| {
@@ -59,7 +59,7 @@ pub fn parse_bnf<'a>(bnf: &'a str) -> Grammar<'a, 'a> {
         .map(|(lhs, rhs)| {
             let lhs = NonTerminalSymbol(lhs);
             let rhs = rhs
-                .into_iter()
+                .iter()
                 .map(|rhs| {
                     if lines.iter().any(|(lhs, _)| lhs == rhs) {
                         Symbol::NonTerminal(NonTerminalSymbol(rhs))
