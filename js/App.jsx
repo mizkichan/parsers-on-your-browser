@@ -70,7 +70,7 @@ const GrammarBox = ({ grammar }) => (
   <table>
     <caption>Grammar</caption>
     <tbody>
-      {grammar.rules.map((rule, i) => (
+      {grammar.map((rule, i) => (
         <tr key={i}>
           <td>
             <Symbolum symbolum={{ NonTerminal: rule.lhs }} />
