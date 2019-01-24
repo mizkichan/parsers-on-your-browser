@@ -10,7 +10,7 @@ export default class App extends React.Component {
       algorithm: "earley",
       bnf: "",
       input: "",
-      grammar: null
+      grammar: []
     };
   }
 
@@ -20,9 +20,9 @@ export default class App extends React.Component {
     });
   }
 
-  handleControllsChange(value) {
+  handleControlsChange(value) {
     if (value.hasOwnProperty("bnf")) {
-      value = { ...value, grammar: wasm.parse_bnf(value.bnf) || null };
+      value.grammar = wasm.parse_bnf(value.bnf);
     }
     this.setState(value);
   }
@@ -30,45 +30,48 @@ export default class App extends React.Component {
   render() {
     return (
       <div>
-        <Controlls onChange={value => this.handleControllsChange(value)} />
-        {this.state.grammar && <GrammarBox grammar={this.state.grammar} />}
+        <Controls onChange={value => this.handleControlsChange(value)} />
+        <GrammarBox grammar={this.state.grammar} />
         {this.state.algorithm === "earley" && <Earley />}
       </div>
     );
   }
 }
 
-const Controlls = ({ onChange }) => (
-  <div>
-    <div>
-      <span className="label">Algorithm:</span>
-      <Radio
+const Controls = ({ onChange }) => (
+  <div className="controls">
+    <Row label="Algorithm:">
+      <RadioGroup
         name="algorithm"
-        defaultChecked
-        label="Earley"
-        value="earley"
-        onChange={onChange}
-      />
-      <Radio name="algorithm" label="CYK" value="cyk" onChange={onChange} />
-      <Radio name="algorithm" label="GLR" value="glr" onChange={onChange} />
-    </div>
-    <div>
-      <span className="label">Grammar:</span>
+        onChange={algorithm => onChange({ algorithm })}
+      >
+        <RadioButton defaultChecked label="Earley" value="earley" />
+        <RadioButton label="CYK" value="cyk" />
+        <RadioButton label="GLR" value="glr" />
+      </RadioGroup>
+    </Row>
+    <Row label="Grammar:">
       <textarea onChange={ev => onChange({ bnf: ev.target.value })} />
-    </div>
-    <div>
-      <span className="label">Text to parse:</span>
+    </Row>
+    <Row label="Text to parse:">
       <input
         type="text"
         onChange={ev => onChange({ input: ev.target.value })}
       />
-    </div>
+    </Row>
+  </div>
+);
+
+const Row = ({ label, children }) => (
+  <div className="control-row">
+    <div>{label}</div>
+    {children}
   </div>
 );
 
 const GrammarBox = ({ grammar }) => (
-  <table>
-    <caption>Grammar</caption>
+  <table className="grammar">
+    <caption>Grammar{grammar.length == 0 ? " (No Rules)" : ""}</caption>
     <tbody>
       {grammar.map((rule, i) => (
         <tr key={i}>
@@ -95,13 +98,21 @@ const Symbolum = ({ symbolum }) => {
   }
 };
 
-const Radio = ({ label, name, value, defaultChecked, onChange }) => (
+const RadioGroup = ({ name, onChange, children }) => (
+  <div>
+    {React.Children.map(children, child =>
+      React.cloneElement(child, { name, onChange })
+    )}
+  </div>
+);
+
+const RadioButton = ({ label, name, value, defaultChecked, onChange }) => (
   <label>
     <input
       type="radio"
       name={name}
       defaultChecked={defaultChecked}
-      onChange={() => onChange({ [name]: value })}
+      onChange={() => onChange(value)}
     />
     {label}
   </label>
