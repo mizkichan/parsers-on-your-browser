@@ -1,21 +1,21 @@
 use serde_derive::Serialize;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct Rule<'src> {
     pub lhs: NonTerminalSymbol<'src>,
     pub rhs: Vec<Symbol<'src>>,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum Symbol<'src> {
     Terminal(TerminalSymbol<'src>),
     NonTerminal(NonTerminalSymbol<'src>),
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct TerminalSymbol<'src>(pub &'src str);
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct NonTerminalSymbol<'src>(pub &'src str);
 
 pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
@@ -48,15 +48,6 @@ pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
         .collect()
 }
 
-#[derive(Debug, PartialEq, Serialize)]
-pub enum Node<'symbol, 'src> {
-    Terminal(&'symbol TerminalSymbol<'src>),
-    NonTerminal {
-        symbol: &'symbol NonTerminalSymbol<'src>,
-        children: Vec<Node<'symbol, 'src>>,
-    },
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -73,8 +64,8 @@ mod test {
                 Rule {
                     lhs: NonTerminalSymbol("S"),
                     rhs: vec![
-                        Symbol::Terminal(TerminalSymbol(Some("NP"))),
-                        Symbol::Terminal(TerminalSymbol(Some("VP")))
+                        Symbol::Terminal(TerminalSymbol("NP")),
+                        Symbol::Terminal(TerminalSymbol("VP"))
                     ]
                 }
             ]

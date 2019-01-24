@@ -10,7 +10,8 @@ export default class App extends React.Component {
       algorithm: "earley",
       bnf: "",
       input: "",
-      grammar: []
+      grammar: [],
+      earley: null
     };
   }
 
@@ -23,6 +24,11 @@ export default class App extends React.Component {
   handleControlsChange(value) {
     if (value.hasOwnProperty("bnf")) {
       value.grammar = wasm.parse_bnf(value.bnf);
+    }
+    if (value.hasOwnProperty("input")) {
+      if (this.state.algorithm === "earley") {
+        value.earley = wasm.parse_earley(this.state.bnf, value.input);
+      }
     }
     this.setState(value);
   }
