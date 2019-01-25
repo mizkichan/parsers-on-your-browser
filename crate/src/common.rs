@@ -1,22 +1,57 @@
 use serde_derive::Serialize;
+use std::fmt;
+use std::fmt::Write;
 
-#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct Rule<'src> {
     pub lhs: NonTerminalSymbol<'src>,
     pub rhs: Vec<Symbol<'src>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
+impl<'src> fmt::Display for Rule<'src> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.lhs.as_str())?;
+        f.write_str(" →")?;
+        for symbol in &self.rhs {
+            f.write_char(' ')?;
+            f.write_str(symbol.as_str())?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub enum Symbol<'src> {
     Terminal(TerminalSymbol<'src>),
     NonTerminal(NonTerminalSymbol<'src>),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
+impl<'src> Symbol<'src> {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Symbol::Terminal(terminal) => terminal.as_str(),
+            Symbol::NonTerminal(non_terminal) => non_terminal.as_str(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct TerminalSymbol<'src>(pub &'src str);
 
-#[derive(Debug, PartialEq, Eq, Hash, Serialize)]
+impl<'src> TerminalSymbol<'src> {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct NonTerminalSymbol<'src>(pub &'src str);
+
+impl<'src> NonTerminalSymbol<'src> {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
 
 pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
     let lines = bnf

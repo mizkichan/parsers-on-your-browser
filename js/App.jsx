@@ -38,7 +38,12 @@ export default class App extends React.Component {
       <div>
         <Controls onChange={value => this.handleControlsChange(value)} />
         <GrammarBox grammar={this.state.grammar} />
-        {this.state.algorithm === "earley" && <Earley />}
+        {this.state.algorithm === "earley" && this.state.earley != null && (
+          <EarleyChart
+            start={this.state.grammar[0].lhs}
+            stateSets={this.state.earley}
+          />
+        )}
       </div>
     );
   }
@@ -124,6 +129,51 @@ const RadioButton = ({ label, name, value, defaultChecked, onChange }) => (
   </label>
 );
 
-const Earley = () => <div>Earley</div>;
+const EarleyChart = ({ start, stateSets }) => (
+  <table>
+    <caption>Earley Chart</caption>
+    <thead>
+      <tr>
+        <th>State Set</th>
+        <th>#State</th>
+        <th colSpan={3}>Rule</th>
+        <th>Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      {stateSets.map((stateSet, k) =>
+        stateSet.map((state, i) => (
+          <tr
+            key={`${k}${i}`}
+            className={
+              state.rule.lhs === start &&
+              state.rule.rhs.length === state.dot &&
+              state.position === 0
+                ? "earley-complete"
+                : null
+            }
+          >
+            {i === 0 ? <th rowSpan={stateSet.length}>{`S(${k})`}</th> : null}
+            <th>{`#${i + 1}`}</th>
+            <td>
+              <Symbolum symbolum={{ NonTerminal: state.rule.lhs }} />
+            </td>
+            <td>→</td>
+            <td>
+              {[
+                state.rule.rhs.map((symbolum, j) => [
+                  state.dot === j ? "·" : null,
+                  <Symbolum key={j} symbolum={symbolum} />
+                ]),
+                state.dot === state.rule.rhs.length ? "·" : null
+              ]}
+            </td>
+            <td>{state.position}</td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+);
 
 // vim: set ts=2 sw=2 et:

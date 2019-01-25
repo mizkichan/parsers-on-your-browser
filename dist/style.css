@@ -45,4 +45,17 @@ caption {
   color: #00f;
 }
 
+table {
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border: thin solid #ddd;
+}
+
+.earley-complete {
+  background: #0d0;
+}
+
 /* vim: set ts=2 sw=2 et: */
