@@ -14,15 +14,13 @@ pub fn main() {
 }
 
 #[wasm_bindgen]
-pub fn parse_bnf(bnf: &str) -> JsValue {
-    JsValue::from_serde(&common::parse_bnf(bnf)).unwrap()
-}
-
-#[wasm_bindgen]
 pub fn parse_earley(bnf: &str, input: &str) -> JsValue {
-    info!("parsing start");
     let grammar = common::parse_bnf(bnf);
     let input = input.trim().split(char::is_whitespace).collect::<Vec<_>>();
-    let result = earley::parse(&grammar, &input);
-    JsValue::from_serde(&result).unwrap()
+    let result = if grammar.is_empty() {
+        None
+    } else {
+        Some(earley::parse(&grammar, &input))
+    };
+    JsValue::from_serde(&(&grammar, &result)).unwrap()
 }

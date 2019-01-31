@@ -3,9 +3,6 @@
     "start": "webpack-dev-server -d",
     "build": "webpack"
   },
-  "bin": {
-    "create-rust-webpack": ".bin/create-rust-webpack.js"
-  },
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/preset-react": "^7.0.0",

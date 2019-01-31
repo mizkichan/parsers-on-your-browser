@@ -1,6 +1,8 @@
 import * as React from "react";
+import { EarleyChart } from "./earley.jsx";
+import { Symbolum, Rule } from "./common.jsx";
 
-let wasm;
+let crate;
 
 export default class App extends React.Component {
   constructor() {
@@ -16,21 +18,30 @@ export default class App extends React.Component {
   }
 
   componentDidMount() {
-    import("../crate/pkg/parsers_on_your_browser").then(module => {
-      wasm = module;
+    import("../crate/pkg").then(module => {
+      crate = module;
     });
   }
 
   handleControlsChange(value) {
     if (value.hasOwnProperty("bnf")) {
-      value.grammar = wasm.parse_bnf(value.bnf);
+      this.setState({ bnf: value.bnf }, this.parse);
+    } else if (value.hasOwnProperty("input")) {
+      this.setState({ input: value.input }, this.parse);
     }
-    if (value.hasOwnProperty("input")) {
-      if (this.state.algorithm === "earley") {
-        value.earley = wasm.parse_earley(this.state.bnf, value.input);
-      }
+  }
+
+  parse() {
+    switch (this.state.algorithm) {
+      case "earley":
+        const t = crate.parse_earley(this.state.bnf, this.state.input);
+        const [grammar, earley] = t;
+        this.setState({
+          grammar,
+          earley
+        });
+        break;
     }
-    this.setState(value);
   }
 
   render() {
@@ -40,7 +51,7 @@ export default class App extends React.Component {
         <GrammarBox grammar={this.state.grammar} />
         {this.state.algorithm === "earley" && this.state.earley != null && (
           <EarleyChart
-            start={this.state.grammar[0].lhs}
+            start={this.state.grammar[0] && this.state.grammar[0].lhs}
             stateSets={this.state.earley}
           />
         )}
@@ -86,28 +97,15 @@ const GrammarBox = ({ grammar }) => (
     <tbody>
       {grammar.map((rule, i) => (
         <tr key={i}>
+          <th>#{i + 1}</th>
           <td>
-            <Symbolum symbolum={{ NonTerminal: rule.lhs }} />
-          </td>
-          <td>→</td>
-          <td>
-            {rule.rhs.map((symbolum, i) => (
-              <Symbolum key={i} symbolum={symbolum} />
-            ))}
+            <Rule rule={rule} />
           </td>
         </tr>
       ))}
     </tbody>
   </table>
 );
-
-const Symbolum = ({ symbolum }) => {
-  if (symbolum.hasOwnProperty("Terminal")) {
-    return <span className="terminal">{symbolum.Terminal}</span>;
-  } else {
-    return <span className="non-terminal">{symbolum.NonTerminal}</span>;
-  }
-};
 
 const RadioGroup = ({ name, onChange, children }) => (
   <div>
@@ -127,53 +125,6 @@ const RadioButton = ({ label, name, value, defaultChecked, onChange }) => (
     />
     {label}
   </label>
-);
-
-const EarleyChart = ({ start, stateSets }) => (
-  <table>
-    <caption>Earley Chart</caption>
-    <thead>
-      <tr>
-        <th>State Set</th>
-        <th>#State</th>
-        <th colSpan={3}>Rule</th>
-        <th>Position</th>
-      </tr>
-    </thead>
-    <tbody>
-      {stateSets.map((stateSet, k) =>
-        stateSet.map((state, i) => (
-          <tr
-            key={`${k}${i}`}
-            className={
-              state.rule.lhs === start &&
-              state.rule.rhs.length === state.dot &&
-              state.position === 0
-                ? "earley-complete"
-                : null
-            }
-          >
-            {i === 0 ? <th rowSpan={stateSet.length}>{`S(${k})`}</th> : null}
-            <th>{`#${i + 1}`}</th>
-            <td>
-              <Symbolum symbolum={{ NonTerminal: state.rule.lhs }} />
-            </td>
-            <td>→</td>
-            <td>
-              {[
-                state.rule.rhs.map((symbolum, j) => [
-                  state.dot === j ? "·" : null,
-                  <Symbolum key={j} symbolum={symbolum} />
-                ]),
-                state.dot === state.rule.rhs.length ? "·" : null
-              ]}
-            </td>
-            <td>{state.position}</td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
 );
 
 // vim: set ts=2 sw=2 et:

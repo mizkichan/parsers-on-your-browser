@@ -54,8 +54,13 @@ td {
   border: thin solid #ddd;
 }
 
-.earley-complete {
+.earley-complete td {
   background: #0d0;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
 }
 
 /* vim: set ts=2 sw=2 et: */
