@@ -46,7 +46,7 @@ impl<'src, 'rule> fmt::Display for State<'src, 'rule> {
     }
 }
 
-pub fn parse<'sym, 'src, 'rule>(
+pub fn parse<'src, 'rule>(
     grammar: &'rule [Rule<'src>],
     input: &[&str],
 ) -> Vec<Vec<State<'src, 'rule>>> {
