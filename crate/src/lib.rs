@@ -1,10 +1,15 @@
 mod common;
 mod earley;
+use cfg_if::cfg_if;
 use log::info;
 use wasm_bindgen::prelude::*;
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+cfg_if! {
+    if #[cfg(feature = "wee_alloc")] {
+        #[global_allocator]
+        static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+    }
+}
 
 #[wasm_bindgen(start)]
 pub fn main() {
