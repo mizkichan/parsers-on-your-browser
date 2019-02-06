@@ -1,10 +1,9 @@
 use crate::common::*;
-use log::info;
 use serde_derive::Serialize;
 use std::fmt;
 use std::fmt::Write;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct State<'r> {
     rule: &'r Rule,
     dot: usize,
@@ -12,10 +11,10 @@ pub struct State<'r> {
 }
 
 impl<'r> State<'r> {
-    fn new(rule: &'r Rule, dot: usize, position: usize) -> State<'r> {
+    fn new(rule: &'r Rule, position: usize) -> State<'r> {
         State {
             rule,
-            dot,
+            dot: 0,
             position,
         }
     }
@@ -24,9 +23,15 @@ impl<'r> State<'r> {
         self.rule.rhs.get(self.dot)
     }
 
-    fn advanced(&self) -> State<'r> {
-        assert!(self.dot < self.rule.rhs.len());
-        State::new(self.rule, self.dot + 1, self.position)
+    fn advanced(&self) -> Option<State<'r>> {
+        if self.dot < self.rule.rhs.len() {
+            Some(State {
+                dot: self.dot + 1,
+                ..*self
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -48,14 +53,14 @@ impl<'r> fmt::Display for State<'r> {
 }
 
 pub fn parse<'r>(grammar: &'r [Rule], input: &[&str]) -> Vec<Vec<State<'r>>> {
-    let mut state_sets = vec![vec![State::new(&grammar[0], 0, 0)]];
+    let mut state_sets = vec![vec![State::new(&grammar[0], 0)]];
 
     while let Some(new_states) = get_new_states(grammar, &state_sets, input) {
-        for (k, state) in new_states.into_iter() {
-            if state_sets.len() <= k {
-                state_sets.resize_with(k + 1, Vec::new);
+        for (position, state) in new_states.into_iter() {
+            if state_sets.len() <= position {
+                state_sets.resize_with(position + 1, Vec::new);
             }
-            state_sets[k].push(state);
+            state_sets[position].push(state);
         }
     }
 
@@ -69,7 +74,7 @@ fn get_new_states<'r>(
 ) -> Option<Vec<(usize, State<'r>)>> {
     let mut result = Vec::new();
 
-    for (k, state_set) in state_sets.iter().enumerate() {
+    for (position, state_set) in state_sets.iter().enumerate() {
         for state in state_set {
             match state.dotted_symbol() {
                 // predict
@@ -78,10 +83,10 @@ fn get_new_states<'r>(
                         grammar
                             .iter()
                             .filter(|rule| &rule.lhs == non_terminal)
-                            .map(|rule| State::new(rule, 0, k))
-                            .filter_map(|state| match state_sets.get(k) {
+                            .map(|rule| State::new(rule, position))
+                            .filter_map(|state| match state_sets.get(position) {
                                 Some(state_set) if state_set.contains(&state) => None,
-                                _ => Some((k, state)),
+                                _ => Some((position, state)),
                             }),
                     );
                 }
@@ -89,11 +94,11 @@ fn get_new_states<'r>(
                 // scan
                 Some(Symbol::Terminal(terminal)) => {
                     if Some(&terminal.as_str()) == input.get(state.position + state.dot) {
-                        let new_state = state.advanced();
-                        match state_sets.get(k + 1) {
+                        let new_state = state.advanced().unwrap();
+                        match state_sets.get(position + 1) {
                             Some(state_set) if state_set.contains(&new_state) => {}
                             _ => {
-                                result.push((k + 1, new_state));
+                                result.push((position + 1, new_state));
                             }
                         }
                     }
@@ -105,14 +110,12 @@ fn get_new_states<'r>(
                         state_sets[state.position]
                             .iter()
                             .filter_map(|new_state| match new_state.dotted_symbol() {
-                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
-                                    Some(new_state.advanced())
-                                }
-                                _ => None,
+                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => None,
+                                _ => new_state.advanced(),
                             })
-                            .filter_map(|state| match state_sets.get(k) {
-                                Some(state_set) if state_set.contains(&state) => None,
-                                _ => Some((k, state)),
+                            .filter_map(|new_state| match state_sets.get(position) {
+                                Some(state_set) if state_set.contains(&new_state) => None,
+                                _ => Some((position, new_state)),
                             }),
                     );
                 }

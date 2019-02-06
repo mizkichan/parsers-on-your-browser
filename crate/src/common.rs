@@ -2,7 +2,7 @@ use serde_derive::Serialize;
 use std::fmt;
 use std::fmt::Write;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Rule {
     pub lhs: NonTerminalSymbol,
     pub rhs: Vec<Symbol>,
@@ -20,7 +20,7 @@ impl fmt::Display for Rule {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum Symbol {
     Terminal(TerminalSymbol),
     NonTerminal(NonTerminalSymbol),
@@ -35,7 +35,7 @@ impl Symbol {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct TerminalSymbol(pub String);
 
 impl TerminalSymbol {
@@ -44,7 +44,7 @@ impl TerminalSymbol {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct NonTerminalSymbol(pub String);
 
 impl NonTerminalSymbol {
