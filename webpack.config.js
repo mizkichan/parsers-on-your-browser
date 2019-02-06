@@ -1,22 +1,26 @@
 const path = require("path");
+const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 const dist = path.resolve(__dirname, "dist");
-const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 module.exports = {
   entry: "./js/index.jsx",
+
   output: {
     path: dist,
     filename: "bundle.js"
   },
+
   devServer: {
     contentBase: dist
   },
+
   plugins: [
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "crate")
     })
   ],
+
   module: {
     rules: [
       {
@@ -26,7 +30,9 @@ module.exports = {
           loader: "babel-loader",
           options: {
             presets: ["@babel/preset-react"],
-            parserOpts: { plugins: ["dynamicImport"] }
+            parserOpts: {
+              plugins: ["dynamicImport"]
+            }
           }
         }
       }
