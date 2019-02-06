@@ -110,8 +110,10 @@ fn get_new_states<'r>(
                         state_sets[state.position]
                             .iter()
                             .filter_map(|new_state| match new_state.dotted_symbol() {
-                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => None,
-                                _ => new_state.advanced(),
+                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
+                                    new_state.advanced()
+                                }
+                                _ => None,
                             })
                             .filter_map(|new_state| match state_sets.get(position) {
                                 Some(state_set) if state_set.contains(&new_state) => None,
