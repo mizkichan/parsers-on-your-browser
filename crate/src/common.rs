@@ -3,12 +3,12 @@ use std::fmt;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct Rule<'src> {
-    pub lhs: NonTerminalSymbol<'src>,
-    pub rhs: Vec<Symbol<'src>>,
+pub struct Rule {
+    pub lhs: NonTerminalSymbol,
+    pub rhs: Vec<Symbol>,
 }
 
-impl<'src> fmt::Display for Rule<'src> {
+impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(self.lhs.as_str())?;
         f.write_str(" →")?;
@@ -21,12 +21,12 @@ impl<'src> fmt::Display for Rule<'src> {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
-pub enum Symbol<'src> {
-    Terminal(TerminalSymbol<'src>),
-    NonTerminal(NonTerminalSymbol<'src>),
+pub enum Symbol {
+    Terminal(TerminalSymbol),
+    NonTerminal(NonTerminalSymbol),
 }
 
-impl<'src> Symbol<'src> {
+impl Symbol {
     pub fn as_str(&self) -> &str {
         match self {
             Symbol::Terminal(terminal) => terminal.as_str(),
@@ -36,18 +36,18 @@ impl<'src> Symbol<'src> {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct TerminalSymbol<'src>(pub &'src str);
+pub struct TerminalSymbol(pub String);
 
-impl<'src> TerminalSymbol<'src> {
+impl TerminalSymbol {
     pub fn as_str(&self) -> &str {
         &self.0
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct NonTerminalSymbol<'src>(pub &'src str);
+pub struct NonTerminalSymbol(pub String);
 
-impl<'src> NonTerminalSymbol<'src> {
+impl NonTerminalSymbol {
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -66,15 +66,17 @@ pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
 
     lines
         .iter()
+        .cloned()
         .map(|(lhs, rhs)| {
-            let lhs = NonTerminalSymbol(lhs);
+            let lhs = NonTerminalSymbol(lhs.to_owned());
             let rhs = rhs
                 .iter()
+                .cloned()
                 .map(|rhs| {
-                    if lines.iter().any(|(lhs, _)| lhs == rhs) {
-                        Symbol::NonTerminal(NonTerminalSymbol(rhs))
+                    if lines.iter().any(|(lhs, _)| lhs == &rhs) {
+                        Symbol::NonTerminal(NonTerminalSymbol(rhs.to_owned()))
                     } else {
-                        Symbol::Terminal(TerminalSymbol(rhs))
+                        Symbol::Terminal(TerminalSymbol(rhs.to_owned()))
                     }
                 })
                 .collect();
@@ -93,14 +95,14 @@ mod test {
             parse_bnf("S\nS NP VP"),
             vec![
                 Rule {
-                    lhs: NonTerminalSymbol("S"),
+                    lhs: NonTerminalSymbol("S".to_owned()),
                     rhs: vec![]
                 },
                 Rule {
-                    lhs: NonTerminalSymbol("S"),
+                    lhs: NonTerminalSymbol("S".to_owned()),
                     rhs: vec![
-                        Symbol::Terminal(TerminalSymbol("NP")),
-                        Symbol::Terminal(TerminalSymbol("VP"))
+                        Symbol::Terminal(TerminalSymbol("NP".to_owned())),
+                        Symbol::Terminal(TerminalSymbol("VP".to_owned()))
                     ]
                 }
             ]

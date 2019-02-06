@@ -4,14 +4,14 @@ use std::fmt;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct State<'src, 'rule> {
-    rule: &'rule Rule<'src>,
+pub struct State<'r> {
+    rule: &'r Rule,
     dot: usize,
     position: usize,
 }
 
-impl<'src, 'rule> State<'src, 'rule> {
-    fn new(rule: &'rule Rule<'src>, dot: usize, position: usize) -> State<'src, 'rule> {
+impl<'r> State<'r> {
+    fn new(rule: &'r Rule, dot: usize, position: usize) -> State<'r> {
         State {
             rule,
             dot,
@@ -19,17 +19,17 @@ impl<'src, 'rule> State<'src, 'rule> {
         }
     }
 
-    fn dotted_symbol(&self) -> Option<&Symbol<'src>> {
+    fn dotted_symbol(&self) -> Option<&Symbol> {
         self.rule.rhs.get(self.dot)
     }
 
-    fn advanced(&self) -> State<'src, 'rule> {
+    fn advanced(&self) -> State<'r> {
         assert!(self.dot < self.rule.rhs.len());
         State::new(self.rule, self.dot + 1, self.position)
     }
 }
 
-impl<'src, 'rule> fmt::Display for State<'src, 'rule> {
+impl<'r> fmt::Display for State<'r> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_char('(')?;
         f.write_str(self.rule.lhs.as_str())?;
@@ -46,10 +46,7 @@ impl<'src, 'rule> fmt::Display for State<'src, 'rule> {
     }
 }
 
-pub fn parse<'src, 'rule>(
-    grammar: &'rule [Rule<'src>],
-    input: &[&str],
-) -> Vec<Vec<State<'src, 'rule>>> {
+pub fn parse<'r>(grammar: &'r [Rule], input: &[&str]) -> Vec<Vec<State<'r>>> {
     let mut state_sets = vec![vec![State::new(&grammar[0], 0, 0)]];
 
     while let Some(new_states) = get_new_states(grammar, &state_sets, input) {
@@ -64,11 +61,11 @@ pub fn parse<'src, 'rule>(
     state_sets
 }
 
-fn get_new_states<'src, 'rule>(
-    grammar: &'rule [Rule<'src>],
-    state_sets: &[Vec<State<'src, 'rule>>],
+fn get_new_states<'r>(
+    grammar: &'r [Rule],
+    state_sets: &[Vec<State<'r>>],
     input: &[&str],
-) -> Option<Vec<(usize, State<'src, 'rule>)>> {
+) -> Option<Vec<(usize, State<'r>)>> {
     let mut result = Vec::new();
 
     for (k, state_set) in state_sets.iter().enumerate() {
@@ -87,17 +84,14 @@ fn get_new_states<'src, 'rule>(
                 ),
 
                 // scan
-                Some(Symbol::Terminal(terminal))
-                    if Some(&terminal.as_str()) == input.get(state.position + state.dot) =>
-                {
-                    let new_state = state.advanced();
-                    match state_sets.get(k + 1) {
-                        Some(state_set) if state_set.contains(&new_state) => (),
-                        _ => result.push((k + 1, new_state)),
+                Some(Symbol::Terminal(terminal)) => {
+                    if Some(&terminal.as_str()) == input.get(state.position + state.dot) {
+                        let new_state = state.advanced();
+                        if !(state_sets.len() < k + 1 && state_sets[k + 1].contains(&new_state)) {
+                            result.push((k + 1, new_state));
+                        }
                     }
                 }
-
-                Some(Symbol::Terminal(..)) => (),
 
                 // complete
                 None => result.extend(
