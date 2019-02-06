@@ -1,4 +1,5 @@
 use crate::common::*;
+use log::info;
 use serde_derive::Serialize;
 use std::fmt;
 use std::fmt::Write;
@@ -72,42 +73,49 @@ fn get_new_states<'r>(
         for state in state_set {
             match state.dotted_symbol() {
                 // predict
-                Some(Symbol::NonTerminal(non_terminal)) => result.extend(
-                    grammar
-                        .iter()
-                        .filter(|rule| &rule.lhs == non_terminal)
-                        .map(|rule| State::new(rule, 0, k))
-                        .filter_map(|state| match state_sets.get(k) {
-                            Some(state_set) if state_set.contains(&state) => None,
-                            _ => Some((k, state)),
-                        }),
-                ),
+                Some(Symbol::NonTerminal(non_terminal)) => {
+                    result.extend(
+                        grammar
+                            .iter()
+                            .filter(|rule| &rule.lhs == non_terminal)
+                            .map(|rule| State::new(rule, 0, k))
+                            .filter_map(|state| match state_sets.get(k) {
+                                Some(state_set) if state_set.contains(&state) => None,
+                                _ => Some((k, state)),
+                            }),
+                    );
+                }
 
                 // scan
                 Some(Symbol::Terminal(terminal)) => {
                     if Some(&terminal.as_str()) == input.get(state.position + state.dot) {
                         let new_state = state.advanced();
-                        if !(state_sets.len() < k + 1 && state_sets[k + 1].contains(&new_state)) {
-                            result.push((k + 1, new_state));
+                        match state_sets.get(k + 1) {
+                            Some(state_set) if state_set.contains(&new_state) => {}
+                            _ => {
+                                result.push((k + 1, new_state));
+                            }
                         }
                     }
                 }
 
                 // complete
-                None => result.extend(
-                    state_sets[state.position]
-                        .iter()
-                        .filter_map(|new_state| match new_state.dotted_symbol() {
-                            Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
-                                Some(new_state.advanced())
-                            }
-                            _ => None,
-                        })
-                        .filter_map(|state| match state_sets.get(k) {
-                            Some(state_set) if state_set.contains(&state) => None,
-                            _ => Some((k, state)),
-                        }),
-                ),
+                None => {
+                    result.extend(
+                        state_sets[state.position]
+                            .iter()
+                            .filter_map(|new_state| match new_state.dotted_symbol() {
+                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
+                                    Some(new_state.advanced())
+                                }
+                                _ => None,
+                            })
+                            .filter_map(|state| match state_sets.get(k) {
+                                Some(state_set) if state_set.contains(&state) => None,
+                                _ => Some((k, state)),
+                            }),
+                    );
+                }
             }
         }
     }
