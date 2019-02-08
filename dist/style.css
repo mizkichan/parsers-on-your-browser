@@ -31,18 +31,18 @@ caption {
 
 .terminal,
 .non-terminal {
-  background-color: #ddd;
+  background-color: #dfdfdf;
   margin: 0.25em;
   padding: 0.25em;
   line-height: 2;
 }
 
 .terminal {
-  color: #f00;
+  color: #ff0000;
 }
 
 .non-terminal {
-  color: #00f;
+  color: #0000ff;
 }
 
 table {
@@ -51,11 +51,11 @@ table {
 
 th,
 td {
-  border: thin solid #ddd;
+  border: thin solid #dfdfdf;
 }
 
 .earley-complete td {
-  background: #0d0;
+  background: #bfffbf;
 }
 
 .rule {
