@@ -10,6 +10,7 @@ export const EarleyChart = ({ start, stateSets }) => (
         <th>#State</th>
         <th>Rule</th>
         <th>Position</th>
+        <th>Reason</th>
       </tr>
     </thead>
     <tbody>
@@ -31,11 +32,35 @@ export const EarleyChart = ({ start, stateSets }) => (
               <Rule rule={state.rule} dot={state.dot} />
             </td>
             <td>{state.position}</td>
+            <td>{reason(state.reason)}</td>
           </tr>
         ))
       )}
     </tbody>
   </table>
 );
+
+const reason = reason => {
+  switch (reason.kind) {
+    case "Initial":
+      return "Start rule";
+
+    case "Predict":
+      return `Predict from S(${reason.from_position}) #${
+        reason.from_state
+      } with rule #${reason.from_rule}`;
+
+    case "Scan":
+      return `Scan from S(${reason.from_position}) #${reason.from_state}`;
+
+    case "Complete":
+      return `Complete from S(${reason.from_position}) #${
+        reason.from_state
+      } with S(${reason.with_position}) #${reason.with_state}`;
+
+    default:
+      return null;
+  }
+};
 
 // vim: set ts=2 sw=2 et:
