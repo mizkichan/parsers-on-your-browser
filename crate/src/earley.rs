@@ -100,7 +100,7 @@ fn get_new_states<'r>(
     let mut result = Vec::new();
 
     for (position, state_set) in state_sets.iter().enumerate() {
-        for (i, state) in state_set.iter().enumerate() {
+        for (i_state, state) in state_set.iter().enumerate() {
             match state.dotted_symbol() {
                 // predict
                 Some(Symbol::NonTerminal(non_terminal)) => {
@@ -109,14 +109,14 @@ fn get_new_states<'r>(
                             .iter()
                             .enumerate()
                             .filter(|(_, rule)| &rule.lhs == non_terminal)
-                            .map(|(j, rule)| {
+                            .map(|(i_rule, rule)| {
                                 State::new(
                                     rule,
                                     position,
                                     Reason::Predict {
                                         from_position: position,
-                                        from_state: i + 1,
-                                        from_rule: j + 1,
+                                        from_state: i_state + 1,
+                                        from_rule: i_rule + 1,
                                     },
                                 )
                             })
@@ -133,7 +133,7 @@ fn get_new_states<'r>(
                         let new_state = state
                             .advanced(Reason::Scan {
                                 from_position: position,
-                                from_state: i + 1,
+                                from_state: i_state + 1,
                             })
                             .unwrap();
                         match state_sets.get(position + 1) {
@@ -151,16 +151,18 @@ fn get_new_states<'r>(
                         state_sets[state.position]
                             .iter()
                             .enumerate()
-                            .filter_map(|(j, new_state)| match new_state.dotted_symbol() {
-                                Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
-                                    new_state.advanced(Reason::Complete {
-                                        from_position: position,
-                                        from_state: i + 1,
-                                        with_position: state.position,
-                                        with_state: j + 1,
-                                    })
+                            .filter_map(|(i_new_state, new_state)| {
+                                match new_state.dotted_symbol() {
+                                    Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
+                                        new_state.advanced(Reason::Complete {
+                                            from_position: position,
+                                            from_state: i_state + 1,
+                                            with_position: state.position,
+                                            with_state: i_new_state + 1,
+                                        })
+                                    }
+                                    _ => None,
                                 }
-                                _ => None,
                             })
                             .filter_map(|new_state| match state_sets.get(position) {
                                 Some(state_set) if state_set.contains(&new_state) => None,
