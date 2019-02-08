@@ -1,7 +1,5 @@
 use crate::common::*;
 use serde_derive::Serialize;
-use std::fmt;
-use std::fmt::Write as _;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct State<'r> {
@@ -35,8 +33,11 @@ impl<'r> State<'r> {
     }
 }
 
+use std::fmt;
 impl<'r> fmt::Display for State<'r> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::fmt::Write as _;
+
         f.write_char('(')?;
         f.write_str(self.rule.lhs.as_str())?;
         f.write_str(" →")?;

@@ -1,6 +1,4 @@
 use serde_derive::Serialize;
-use std::fmt;
-use std::fmt::Write as _;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Rule {
@@ -8,8 +6,11 @@ pub struct Rule {
     pub rhs: Vec<Symbol>,
 }
 
+use std::fmt;
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::fmt::Write as _;
+
         f.write_str(self.lhs.as_str())?;
         f.write_str(" →")?;
         for symbol in &self.rhs {
