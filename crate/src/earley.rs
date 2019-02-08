@@ -1,7 +1,7 @@
 use crate::common::*;
 use serde_derive::Serialize;
 use std::fmt;
-use std::fmt::Write;
+use std::fmt::Write as _;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct State<'r> {
