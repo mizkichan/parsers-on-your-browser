@@ -1,33 +1,12 @@
 use crate::common::*;
 use serde_derive::Serialize;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct State<'r> {
     rule: &'r Rule,
     dot: usize,
     position: usize,
     reason: Reason,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-#[serde(tag = "kind")]
-pub enum Reason {
-    Initial,
-    Predict {
-        from_position: usize,
-        from_state: usize,
-        from_rule: usize,
-    },
-    Scan {
-        from_position: usize,
-        from_state: usize,
-    },
-    Complete {
-        from_position: usize,
-        from_state: usize,
-        with_position: usize,
-        with_state: usize,
-    },
 }
 
 impl<'r> State<'r> {
@@ -57,6 +36,12 @@ impl<'r> State<'r> {
     }
 }
 
+impl<'r> PartialEq for State<'r> {
+    fn eq(&self, other: &State<'r>) -> bool {
+        self.rule == other.rule && self.dot == other.dot && self.position == other.position
+    }
+}
+
 use std::fmt;
 impl<'r> fmt::Display for State<'r> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -77,14 +62,34 @@ impl<'r> fmt::Display for State<'r> {
     }
 }
 
+#[derive(Debug, Serialize)]
+#[serde(tag = "kind")]
+pub enum Reason {
+    Initial,
+    Predict {
+        from_position: usize,
+        from_state: usize,
+        from_rule: usize,
+    },
+    Scan {
+        from_position: usize,
+        from_state: usize,
+    },
+    Complete {
+        from_position: usize,
+        from_state: usize,
+        with_position: usize,
+        with_state: usize,
+    },
+}
+
 pub fn parse<'r>(grammar: &'r [Rule], input: &[&str]) -> Vec<Vec<State<'r>>> {
-    let mut state_sets = vec![vec![State::new(&grammar[0], 0, Reason::Initial)]];
+    let mut state_sets = Vec::new();
+    state_sets.resize_with(input.len() + 1, Vec::new);
+    state_sets[0].push(State::new(&grammar[0], 0, Reason::Initial));
 
     while let Some(new_states) = get_new_states(grammar, &state_sets, input) {
         for (position, state) in new_states.into_iter() {
-            if state_sets.len() <= position {
-                state_sets.resize_with(position + 1, Vec::new);
-            }
             state_sets[position].push(state);
         }
     }
@@ -110,38 +115,32 @@ fn get_new_states<'r>(
                             .enumerate()
                             .filter(|(_, rule)| &rule.lhs == non_terminal)
                             .map(|(i_rule, rule)| {
-                                State::new(
-                                    rule,
+                                (
                                     position,
-                                    Reason::Predict {
-                                        from_position: position,
-                                        from_state: i_state + 1,
-                                        from_rule: i_rule + 1,
-                                    },
+                                    State::new(
+                                        rule,
+                                        position,
+                                        Reason::Predict {
+                                            from_position: position,
+                                            from_state: i_state + 1,
+                                            from_rule: i_rule + 1,
+                                        },
+                                    ),
                                 )
-                            })
-                            .filter_map(|state| match state_sets.get(position) {
-                                Some(state_set) if state_set.contains(&state) => None,
-                                _ => Some((position, state)),
                             }),
                     );
                 }
 
                 // scan
                 Some(Symbol::Terminal(terminal)) => {
-                    if Some(&terminal.as_str()) == input.get(state.position + state.dot) {
+                    if Some(&terminal.as_str()) == input.get(position) {
                         let new_state = state
                             .advanced(Reason::Scan {
                                 from_position: position,
                                 from_state: i_state + 1,
                             })
                             .unwrap();
-                        match state_sets.get(position + 1) {
-                            Some(state_set) if state_set.contains(&new_state) => {}
-                            _ => {
-                                result.push((position + 1, new_state));
-                            }
-                        }
+                        result.push((position + 1, new_state));
                     }
                 }
 
@@ -151,22 +150,22 @@ fn get_new_states<'r>(
                         state_sets[state.position]
                             .iter()
                             .enumerate()
-                            .filter_map(|(i_new_state, new_state)| {
-                                match new_state.dotted_symbol() {
-                                    Some(Symbol::NonTerminal(lhs)) if lhs == &state.rule.lhs => {
-                                        new_state.advanced(Reason::Complete {
+                            .filter(|(_, new_state)| match new_state.dotted_symbol() {
+                                Some(Symbol::NonTerminal(lhs)) => lhs == &state.rule.lhs,
+                                _ => false,
+                            })
+                            .map(|(i_new_state, new_state)| {
+                                (
+                                    position,
+                                    new_state
+                                        .advanced(Reason::Complete {
                                             from_position: position,
                                             from_state: i_state + 1,
                                             with_position: state.position,
                                             with_state: i_new_state + 1,
                                         })
-                                    }
-                                    _ => None,
-                                }
-                            })
-                            .filter_map(|new_state| match state_sets.get(position) {
-                                Some(state_set) if state_set.contains(&new_state) => None,
-                                _ => Some((position, new_state)),
+                                        .unwrap(),
+                                )
                             }),
                     );
                 }
@@ -174,12 +173,15 @@ fn get_new_states<'r>(
         }
     }
 
-    let result = result.into_iter().fold(Vec::new(), |mut acc, x| {
-        if !acc.contains(&x) {
-            acc.push(x);
-        }
-        acc
-    });
+    let result = result
+        .into_iter()
+        .filter(|(position, state)| !state_sets[*position].contains(state))
+        .fold(Vec::new(), |mut acc, x| {
+            if !acc.contains(&x) {
+                acc.push(x);
+            }
+            acc
+        });
 
     if result.is_empty() {
         None
