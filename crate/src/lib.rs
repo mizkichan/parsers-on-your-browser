@@ -1,7 +1,6 @@
 mod common;
 mod earley;
 use cfg_if::cfg_if;
-use log::info;
 use wasm_bindgen::prelude::*;
 
 cfg_if! {
@@ -15,7 +14,7 @@ cfg_if! {
 pub fn main() {
     console_error_panic_hook::set_once();
     console_log::init().unwrap();
-    info!("Hello, world!");
+    log::info!("Hello, world!");
 }
 
 #[wasm_bindgen]

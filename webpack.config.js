@@ -1,23 +1,23 @@
 const path = require("path");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
-const dist = path.resolve(__dirname, "dist");
+const $ = path.resolve.bind(null, __dirname);
 
 module.exports = {
   entry: "./js/index.jsx",
 
   output: {
-    path: dist,
+    path: $("dist"),
     filename: "bundle.js"
   },
 
   devServer: {
-    contentBase: dist
+    contentBase: $("dist")
   },
 
   plugins: [
     new WasmPackPlugin({
-      crateDirectory: path.resolve(__dirname, "crate")
+      crateDirectory: $("crate")
     })
   ],
 
