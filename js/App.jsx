@@ -1,5 +1,6 @@
 import * as React from "react";
 import { EarleyChart } from "./earley.jsx";
+import { CYKTable } from "./cyk.jsx";
 import { Symbolum, Rule } from "./common.jsx";
 
 let crate;
@@ -72,6 +73,9 @@ export default class App extends React.Component {
             start={this.state.grammar.start_symbol}
             stateSets={this.state.earley}
           />
+        )}
+        {this.state.algorithm === "cyk" && this.state.cyk != null && (
+          <CYKTable table={this.state.cyk} input={this.state.input} />
         )}
       </div>
     );

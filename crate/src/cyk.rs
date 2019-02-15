@@ -1,6 +1,4 @@
 use crate::common::*;
-use serde_derive::Serialize;
-use std::collections::HashMap;
 
 enum CNFRule {
     Unary {
@@ -14,20 +12,18 @@ enum CNFRule {
     },
 }
 
-pub fn parse<'r>(
-    grammar: &'r Grammar,
-    input: &[&str],
-    //) -> Option<HashMap<(usize, usize, NonTerminalSymbol), bool>>
-) {
+pub fn parse<'r>(grammar: &'r Grammar, input: &[&str]) -> Vec<Vec<Vec<String>>> {
     let grammar = convert_cnf(grammar);
 
-    let mut table = HashMap::new();
+    let mut table = (0..input.len())
+        .map(|_| (0..input.len()).map(|_| Vec::new()).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
 
     for (i, word) in input.into_iter().enumerate() {
         for rule in &grammar {
-            match rule {
+            match &rule {
                 CNFRule::Unary { lhs, rhs } if rhs == word => {
-                    table.insert((1, i + 1, lhs), true);
+                    table[0][i].push(lhs.to_owned());
                 }
                 _ => {}
             }
@@ -39,10 +35,10 @@ pub fn parse<'r>(
             for p in 0..l {
                 for rule in &grammar {
                     if let CNFRule::Binary { lhs, first, second } = rule {
-                        if table.get(&(p + 1, s + 1, first)).is_some()
-                            && table.get(&(l - p, s + p + 2, second)).is_some()
+                        if table[p][s].contains(&first)
+                            && table[l - p - 1][s + p + 1].contains(&second)
                         {
-                            table.insert((l + 1, s + 1, lhs), true);
+                            table[l][s].push(lhs.to_owned());
                         }
                     }
                 }
@@ -50,7 +46,7 @@ pub fn parse<'r>(
         }
     }
 
-    log::info!("{:#?}", table);
+    table
 }
 
 fn convert_cnf(grammar: &Grammar) -> Vec<CNFRule> {
