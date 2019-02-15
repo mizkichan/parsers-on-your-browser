@@ -13,18 +13,6 @@ impl Grammar {
             rules,
         }
     }
-
-    pub fn is_cnf(&self) -> bool {
-        for (i, rule) in self.rules.iter().enumerate() {
-            match rule.rhs.len() {
-                0 if i == 0 => continue,
-                1 if rule.rhs[0].is_terminal() => continue,
-                2 if rule.rhs[0].is_non_terminal() && rule.rhs[1].is_non_terminal() => continue,
-                _ => return false,
-            }
-        }
-        return true;
-    }
 }
 
 #[derive(Debug, PartialEq, Serialize)]

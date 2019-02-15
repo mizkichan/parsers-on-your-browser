@@ -13,7 +13,8 @@ export default class App extends React.Component {
       bnf: "",
       input: "",
       grammar: null,
-      earley: null
+      earley: null,
+      cyk: null
     };
   }
 
@@ -28,6 +29,8 @@ export default class App extends React.Component {
       this.setState({ bnf: value.bnf }, this.parse);
     } else if (value.hasOwnProperty("input")) {
       this.setState({ input: value.input }, this.parse);
+    } else if (value.hasOwnProperty("algorithm")) {
+      this.setState({ algorithm: value.algorithm }, this.parse);
     }
   }
 
@@ -41,6 +44,18 @@ export default class App extends React.Component {
         this.setState({
           grammar,
           earley
+        });
+        break;
+      }
+
+      case "cyk": {
+        const [grammar, cyk] = crate.parse_cyk(
+          this.state.bnf,
+          this.state.input
+        );
+        this.setState({
+          grammar,
+          cyk
         });
         break;
       }

@@ -1,4 +1,5 @@
 mod common;
+mod cyk;
 mod earley;
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
@@ -25,6 +26,18 @@ pub fn parse_earley(bnf: &str, input: &str) -> JsValue {
         None
     } else {
         Some(earley::parse(&grammar, &input))
+    };
+    JsValue::from_serde(&(&grammar, &result)).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn parse_cyk(bnf: &str, input: &str) -> JsValue {
+    let grammar = common::parse_bnf(bnf);
+    let input = input.trim().split(char::is_whitespace).collect::<Vec<_>>();
+    let result = if grammar.rules.is_empty() {
+        None
+    } else {
+        Some(cyk::parse(&grammar, &input))
     };
     JsValue::from_serde(&(&grammar, &result)).unwrap()
 }
