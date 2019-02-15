@@ -12,7 +12,7 @@ export default class App extends React.Component {
       algorithm: "earley",
       bnf: "",
       input: "",
-      grammar: [],
+      grammar: null,
       earley: null
     };
   }
@@ -33,14 +33,17 @@ export default class App extends React.Component {
 
   parse() {
     switch (this.state.algorithm) {
-      case "earley":
-        const t = crate.parse_earley(this.state.bnf, this.state.input);
-        const [grammar, earley] = t;
+      case "earley": {
+        const [grammar, earley] = crate.parse_earley(
+          this.state.bnf,
+          this.state.input
+        );
         this.setState({
           grammar,
           earley
         });
         break;
+      }
     }
   }
 
@@ -51,7 +54,7 @@ export default class App extends React.Component {
         <GrammarBox grammar={this.state.grammar} />
         {this.state.algorithm === "earley" && this.state.earley != null && (
           <EarleyChart
-            start={this.state.grammar[0] && this.state.grammar[0].lhs}
+            start={this.state.grammar.start_symbol}
             stateSets={this.state.earley}
           />
         )}
@@ -91,21 +94,22 @@ const Row = ({ label, children }) => (
   </div>
 );
 
-const GrammarBox = ({ grammar }) => (
-  <table className="grammar">
-    <caption>Grammar{grammar.length == 0 ? " (No Rules)" : ""}</caption>
-    <tbody>
-      {grammar.map((rule, i) => (
-        <tr key={i}>
-          <th>#{i + 1}</th>
-          <td>
-            <Rule rule={rule} />
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-);
+const GrammarBox = ({ grammar }) =>
+  grammar && (
+    <table className="grammar">
+      <caption>Grammar{grammar.length == 0 ? " (No Rules)" : ""}</caption>
+      <tbody>
+        {grammar.rules.map((rule, i) => (
+          <tr key={i}>
+            <th>#{i + 1}</th>
+            <td>
+              <Rule rule={rule} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 
 const RadioGroup = ({ name, onChange, children }) => (
   <div>

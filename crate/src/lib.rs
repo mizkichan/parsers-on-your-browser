@@ -21,7 +21,7 @@ pub fn main() {
 pub fn parse_earley(bnf: &str, input: &str) -> JsValue {
     let grammar = common::parse_bnf(bnf);
     let input = input.trim().split(char::is_whitespace).collect::<Vec<_>>();
-    let result = if grammar.is_empty() {
+    let result = if grammar.rules.is_empty() {
         None
     } else {
         Some(earley::parse(&grammar, &input))

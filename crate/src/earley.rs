@@ -83,10 +83,10 @@ pub enum Reason {
     },
 }
 
-pub fn parse<'r>(grammar: &'r [Rule], input: &[&str]) -> Vec<Vec<State<'r>>> {
+pub fn parse<'r>(grammar: &'r Grammar, input: &[&str]) -> Vec<Vec<State<'r>>> {
     let mut state_sets = Vec::new();
     state_sets.resize_with(input.len() + 1, Vec::new);
-    state_sets[0].push(State::new(&grammar[0], 0, Reason::Initial));
+    state_sets[0].push(State::new(&grammar.rules[0], 0, Reason::Initial)); // TODO use start_symbol
 
     while let Some(new_states) = get_new_states(grammar, &state_sets, input) {
         for (position, state) in new_states.into_iter() {
@@ -98,7 +98,7 @@ pub fn parse<'r>(grammar: &'r [Rule], input: &[&str]) -> Vec<Vec<State<'r>>> {
 }
 
 fn get_new_states<'r>(
-    grammar: &'r [Rule],
+    grammar: &'r Grammar,
     state_sets: &[Vec<State<'r>>],
     input: &[&str],
 ) -> Option<Vec<(usize, State<'r>)>> {
@@ -111,6 +111,7 @@ fn get_new_states<'r>(
                 Some(Symbol::NonTerminal(non_terminal)) => {
                     result.extend(
                         grammar
+                            .rules
                             .iter()
                             .enumerate()
                             .filter(|(_, rule)| &rule.lhs == non_terminal)

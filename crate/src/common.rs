@@ -1,6 +1,33 @@
 use serde_derive::Serialize;
 
 #[derive(Debug, PartialEq, Serialize)]
+pub struct Grammar {
+    pub rules: Vec<Rule>,
+    pub start_symbol: Option<NonTerminalSymbol>,
+}
+
+impl Grammar {
+    pub fn new(rules: Vec<Rule>) -> Grammar {
+        Grammar {
+            start_symbol: rules.get(0).map(|rule| rule.lhs.clone()),
+            rules,
+        }
+    }
+
+    pub fn is_cnf(&self) -> bool {
+        for (i, rule) in self.rules.iter().enumerate() {
+            match rule.rhs.len() {
+                0 if i == 0 => continue,
+                1 if rule.rhs[0].is_terminal() => continue,
+                2 if rule.rhs[0].is_non_terminal() && rule.rhs[1].is_non_terminal() => continue,
+                _ => return false,
+            }
+        }
+        return true;
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Rule {
     pub lhs: NonTerminalSymbol,
     pub rhs: Vec<Symbol>,
@@ -21,7 +48,7 @@ impl fmt::Display for Rule {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub enum Symbol {
     Terminal(TerminalSymbol),
     NonTerminal(NonTerminalSymbol),
@@ -34,9 +61,20 @@ impl Symbol {
             Symbol::NonTerminal(non_terminal) => non_terminal.as_str(),
         }
     }
+
+    pub fn is_terminal(&self) -> bool {
+        match self {
+            Symbol::Terminal(..) => true,
+            Symbol::NonTerminal(..) => false,
+        }
+    }
+
+    pub fn is_non_terminal(&self) -> bool {
+        !self.is_terminal()
+    }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub struct TerminalSymbol(pub String);
 
 impl TerminalSymbol {
@@ -45,7 +83,7 @@ impl TerminalSymbol {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub struct NonTerminalSymbol(pub String);
 
 impl NonTerminalSymbol {
@@ -54,7 +92,7 @@ impl NonTerminalSymbol {
     }
 }
 
-pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
+pub fn parse_bnf(bnf: &str) -> Grammar {
     let lines = bnf
         .lines()
         .filter_map(|line| {
@@ -65,25 +103,27 @@ pub fn parse_bnf(bnf: &str) -> Vec<Rule> {
         })
         .collect::<Vec<(&str, Vec<&str>)>>();
 
-    lines
-        .iter()
-        .cloned()
-        .map(|(lhs, rhs)| {
-            let lhs = NonTerminalSymbol(lhs.to_owned());
-            let rhs = rhs
-                .iter()
-                .cloned()
-                .map(|rhs| {
-                    if lines.iter().any(|(lhs, _)| lhs == &rhs) {
-                        Symbol::NonTerminal(NonTerminalSymbol(rhs.to_owned()))
-                    } else {
-                        Symbol::Terminal(TerminalSymbol(rhs.to_owned()))
-                    }
-                })
-                .collect();
-            Rule { lhs, rhs }
-        })
-        .collect()
+    Grammar::new(
+        lines
+            .iter()
+            .cloned()
+            .map(|(lhs, rhs)| {
+                let lhs = NonTerminalSymbol(lhs.to_owned());
+                let rhs = rhs
+                    .iter()
+                    .cloned()
+                    .map(|rhs| {
+                        if lines.iter().any(|(lhs, _)| lhs == &rhs) {
+                            Symbol::NonTerminal(NonTerminalSymbol(rhs.to_owned()))
+                        } else {
+                            Symbol::Terminal(TerminalSymbol(rhs.to_owned()))
+                        }
+                    })
+                    .collect();
+                Rule { lhs, rhs }
+            })
+            .collect(),
+    )
 }
 
 #[cfg(test)]
@@ -94,7 +134,7 @@ mod test {
     fn test_parse_bnf() {
         assert_eq!(
             parse_bnf("S\nS NP VP"),
-            vec![
+            Grammar::new(vec![
                 Rule {
                     lhs: NonTerminalSymbol("S".to_owned()),
                     rhs: vec![]
@@ -106,7 +146,7 @@ mod test {
                         Symbol::Terminal(TerminalSymbol("VP".to_owned()))
                     ]
                 }
-            ]
+            ])
         );
     }
 }
