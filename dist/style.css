@@ -63,4 +63,8 @@ td {
   align-items: center;
 }
 
+.cyk-table td {
+  height: 2em;
+}
+
 /* vim: set ts=2 sw=2 et: */

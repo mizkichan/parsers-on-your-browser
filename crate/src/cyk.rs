@@ -37,6 +37,7 @@ pub fn parse<'r>(grammar: &'r Grammar, input: &[&str]) -> Vec<Vec<Vec<String>>> 
                     if let CNFRule::Binary { lhs, first, second } = rule {
                         if table[p][s].contains(&first)
                             && table[l - p - 1][s + p + 1].contains(&second)
+                            && !table[l][s].contains(lhs)
                         {
                             table[l][s].push(lhs.to_owned());
                         }

@@ -2,14 +2,16 @@ import * as React from "react";
 import { Symbolum, Rule } from "./common.jsx";
 
 export const CYKTable = ({ table, input }) => (
-  <table>
+  <table class="cyk-table">
     <caption>CYK Table</caption>
     <tbody>
       {table.map((_, i) => (
         <tr key={i}>
           {table[table.length - 1 - i].map((col, j) => (
             <td key={j}>
-              {0 < col.length && <Symbolum symbolum={{ NonTerminal: col }} />}
+              {col.map((sym, j) => (
+                <Symbolum symbolum={{ NonTerminal: sym }} />
+              ))}
             </td>
           ))}
         </tr>
